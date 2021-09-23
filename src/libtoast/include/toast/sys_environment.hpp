@@ -36,6 +36,8 @@ class Environment {
         void set_threads(int nthread);
         std::string version() const;
         int64_t tod_buffer_length() const;
+        bool pixel_shmem() const;
+        void set_pixel_shmem(bool);
 
     private:
 
@@ -53,6 +55,7 @@ class Environment {
         std::string release_version_;
         std::string version_;
         int64_t tod_buffer_length_;
+        bool pixel_shared_mem_;
 };
 }
 
