@@ -5,18 +5,15 @@ name:  Test Binary Wheels
 on:
   push:
     branches:
-      - master
       - better_ci
   pull_request:
     branches:
-      - master
       - toast3
 
 # Uncomment here for production and comment out push / PR above.
 # on:
 #   schedule:
 #     - cron: '0 4 * * *'
-
 
 jobs:
   build_wheels:
