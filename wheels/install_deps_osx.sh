@@ -11,15 +11,9 @@ set -e
 
 # Location of this script
 pushd $(dirname $0) >/dev/null 2>&1
-topdir=$(pwd)
+scriptdir=$(pwd)
 popd >/dev/null 2>&1
-
-# Install mpich and mpi4py
-brew install mpich
-pip install mpi4py
-
-# Get newer cmake with pip
-pip install cmake
+echo "Wheel script directory = ${scriptdir}"
 
 # Build options
 
@@ -32,6 +26,39 @@ CXXFLAGS="-O3 -fPIC -std=c++11 -stdlib=libc++"
 MAKEJ=2
 
 PREFIX=/usr/local
+
+# Install OS packages with homebrew
+
+brew install mpich
+
+# In order to maximize ABI compatibility with numpy, build with the newest numpy
+# version containing the oldest ABI version compatible with the python we are using.
+pyver=$(python3 --version 2>&1 | awk '{print $2}' | sed -e "s#\(.*\)\.\(.*\)\..*#\1.\2#")
+if [ ${pyver} == "3.7" ]; then
+    numpy_ver="1.20"
+fi
+if [ ${pyver} == "3.8" ]; then
+    numpy_ver="1.20"
+fi
+if [ ${pyver} == "3.9" ]; then
+    numpy_ver="1.20"
+fi
+if [ ${pyver} == "3.10" ]; then
+    numpy_ver="1.22"
+fi
+
+# Update pip
+pip install --upgrade pip
+
+# Install a couple of base packages that are always required
+pip install -v "numpy<${numpy_ver}" cmake wheel
+
+# Install build requirements.
+CC="${CC}" CFLAGS="${CFLAGS}" pip install -v -r "${scriptdir}/build_requirements.txt"
+
+# Install mpi4py
+
+pip install mpi4py
 
 # libgmp
 
@@ -164,7 +191,7 @@ echo "Building SuiteSparse..."
 rm -rf ${ssparse_dir}
 tar xzf ${ssparse_pkg} \
     && pushd ${ssparse_dir} >/dev/null 2>&1 \
-    && patch -p1 < "${topdir}/suitesparse.patch" \
+    && patch -p1 < "${scriptdir}/suitesparse.patch" \
     && make library JOBS=${MAKEJ} \
     CC="${CC}" CXX="${CXX}" \
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" AUTOCC=no \

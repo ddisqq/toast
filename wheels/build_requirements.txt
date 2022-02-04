@@ -1,0 +1,12 @@
+# Build dependencies installed after any low-level / pinned packages
+cmake
+tomlkit
+traitlets>=5.0
+scipy
+matplotlib
+psutil
+h5py
+pshmem>=0.2.10
+astropy
+healpy
+ephem
