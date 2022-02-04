@@ -5,11 +5,12 @@ name:  Test Binary Wheels
 on:
   push:
     branches:
-      - better_ci
+      - master
+      - toast3
   pull_request:
     branches:
+      - master
       - toast3
-
 
 # Uncomment here for production and comment out push / PR above.
 # on:
