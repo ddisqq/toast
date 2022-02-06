@@ -32,14 +32,14 @@ def find_compilers():
             mpicc_com = subprocess.check_output(
                 "{} -show".format(mpicc), shell=True, universal_newlines=True
             )
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             # Cannot run the MPI C compiler, give up
             raise ImportError
         try:
             mpicxx_com = subprocess.check_output(
                 "{} -show".format(mpicxx), shell=True, universal_newlines=True
             )
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             # Cannot run the MPI C++ compiler, give up
             raise ImportError
         # Extract the serial compilers
@@ -77,7 +77,7 @@ def get_version():
             ver = git_ver
         else:
             ver = rel_ver
-    except CalledProcessError:
+    except subprocess.CalledProcessError:
         raise RuntimeError("Cannot generate version!")
     return ver
 
@@ -217,7 +217,7 @@ def readme():
 
 
 conf = dict()
-conf["name"] = "toast-cmb"
+conf["name"] = "toast"
 conf["description"] = "Time Ordered Astrophysics Scalable Tools"
 conf["long_description"] = readme()
 conf["long_description_content_type"] = "text/markdown"
@@ -248,6 +248,7 @@ conf["extras_require"] = {
 }
 conf["packages"] = find_packages("src")
 conf["package_dir"] = {"": "src"}
+conf["include_package_data"] = True
 conf["ext_modules"] = ext_modules
 conf["scripts"] = scripts
 conf["entry_points"] = {
@@ -277,6 +278,7 @@ conf["classifiers"] = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 

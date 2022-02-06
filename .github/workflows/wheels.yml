@@ -63,8 +63,6 @@ jobs:
           # MacOS arm64 - Re-enable after github CI supports M1 runners:
           #   https://github.com/actions/virtual-environments/issues/2187
           #
-          #  Note:  this may also require a revisit of clang / cereal errors.
-          #
           # - os: macos-11
           #   python: 39
           #   platform_id: macosx_arm64
