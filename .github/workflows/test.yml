@@ -96,30 +96,11 @@ jobs:
       - name: Install OS Dependencies
         run: |
           brew update
-          brew install curl fftw3 suitesparse mpich
-
-      - name: Install libaatm
-        run: |
-          curl -SL "https://github.com/hpc4cmb/libaatm/archive/1.0.9.tar.gz" | tar xzf -
-          cd libaatm-1.0.9
-          mkdir build
-          cd build
-          cmake \
-            -DCMAKE_C_COMPILER="clang" \
-            -DCMAKE_CXX_COMPILER="clang++" \
-            -DCMAKE_C_FLAGS="-O3 -fPIC" \
-            -DCMAKE_CXX_FLAGS="-O3 -fPIC -std=c++11 -stdlib=libc++" \
-            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-            -DCMAKE_INSTALL_PREFIX="/usr" \
-            ..
-          make -j 2 install
-          cd ..
-          cd ..
+          brew install fftw
 
       - name: Install Python Dependencies
         run: |
           python3 -m pip install -r wheels/build_requirements.txt
-          python3 -m pip install mpi4py
 
       - name: Install TOAST
         run: |
@@ -131,12 +112,5 @@ jobs:
 
       - name: Run Serial Tests
         run: |
-          export MPI_DISABLE=1
           export OMP_NUM_THREADS=2
           python3 -c 'import toast.tests; toast.tests.run()'
-
-      - name: Run MPI Tests
-        run: |
-          unset MPI_DISABLE
-          export OMP_NUM_THREADS=2
-          mpirun -np 2 python3 -c 'import toast.tests; toast.tests.run()'
