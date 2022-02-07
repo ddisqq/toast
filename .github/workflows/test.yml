@@ -62,8 +62,8 @@ jobs:
           docker run test_runner:py${{ matrix.pyshort }} \
             mpirun -np 2 python -c 'import toast.tests; toast.tests.run()'
 
-  macos:
-    name: Partial Test Suite on MacOS with Python-${{ matrix.python }}
+  macos-clang:
+    name: Partial Tests on MacOS / clang with Python-${{ matrix.python }}
     runs-on: macos-latest
     strategy:
       # Ensure that a test continues even if another fails.  Useful for
@@ -107,6 +107,59 @@ jobs:
           export TOAST_BUILD_CMAKE_C_COMPILER=clang
           export TOAST_BUILD_CMAKE_CXX_COMPILER=clang++
           export TOAST_BUILD_CMAKE_CXX_FLAGS="-O3 -fPIC -std=c++11 -stdlib=libc++"
+          python3 -m pip install .
+
+      - name: Run Serial Tests
+        run: |
+          export OMP_NUM_THREADS=2
+          python3 -c 'import toast.tests; toast.tests.run()'
+
+  macos-gcc:
+    name: Tests on MacOS / gcc with Python-${{ matrix.python }}
+    runs-on: macos-latest
+    strategy:
+      # Ensure that a test continues even if another fails.  Useful for
+      # debugging multiple problems in parallel.
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.7"
+            pyshort: "37"
+          # - python: "3.8"
+          #   pyshort: "38"
+          # - python: "3.9"
+          #   pyshort: "39"
+          # - python: "3.10"
+          #   pyshort: "310"
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install OS Dependencies
+        run: |
+          brew update
+          brew install fftw suite-sparse gcc
+
+      - name: Install Python Dependencies
+        run: |
+          CC="gcc-11" CFLAGS="-O2 -fPIC" python3 -m pip install -r wheels/build_requirements.txt
+
+      - name: Install TOAST
+        run: |
+          export TOAST_BUILD_CMAKE_C_COMPILER=gcc-11
+          export TOAST_BUILD_CMAKE_CXX_COMPILER=g++-11
+          export TOAST_BUILD_CMAKE_CXX_FLAGS="-O3 -fPIC"
+          export TOAST_BUILD_CMAKE_CXX_FLAGS="-O3 -fPIC -std=c++11"
           python3 -m pip install .
 
       - name: Run Serial Tests
