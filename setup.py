@@ -132,6 +132,7 @@ class CMakeBuild(build_ext):
                 cmake_opts[mat.group(1)] = v
 
         cmake_args = ["-DPYTHON_EXECUTABLE=" + sys.executable]
+        cmake_args += ["-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"]
 
         cfg = "Debug" if self.debug else "Release"
         build_args = ["--config", cfg]
