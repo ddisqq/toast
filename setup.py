@@ -239,6 +239,7 @@ conf["install_requires"] = [
     "psutil",
     "h5py",
     "pshmem>=0.2.10",
+    "pyyaml",
     "astropy",
     "healpy",
     "ephem",

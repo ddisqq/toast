@@ -152,7 +152,8 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          CC="gcc-11" CFLAGS="-O2 -fPIC" python3 -m pip install -r wheels/build_requirements.txt
+          CC="gcc-11" CFLAGS="-O2 -fPIC" \
+          python3 -m pip install -r wheels/build_requirements.txt
 
       - name: Install TOAST
         run: |
