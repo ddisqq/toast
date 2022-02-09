@@ -172,5 +172,5 @@ jobs:
           python3 -m pip list
           python3 -c 'import numpy; print(numpy.__file__)'
           python3 -c 'import toast; print(toast.__file__)'
-          ldd /Users/runner/hostedtoolcache/Python/3.7.12/x64/lib/python3.7/site-packages/toast/_libtoast*
+          otool -L /Users/runner/hostedtoolcache/Python/3.7.12/x64/lib/python3.7/site-packages/toast/_libtoast*
           python3 -c 'import toast.tests; toast.tests.run()'

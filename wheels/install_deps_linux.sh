@@ -166,7 +166,7 @@ tar xzf ${fftw_pkg} \
     && pushd ${fftw_dir} >/dev/null 2>&1 \
     && CC="${CC}" CFLAGS="${CFLAGS}" \
     ./configure \
-    --enable-threads \
+    --enable-openmp \
     --enable-static \
     --disable-shared \
     --prefix="${PREFIX}" \

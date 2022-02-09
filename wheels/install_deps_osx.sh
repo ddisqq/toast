@@ -15,21 +15,35 @@ scriptdir=$(pwd)
 popd >/dev/null 2>&1
 echo "Wheel script directory = ${scriptdir}"
 
-# Build options
+# Build options.  If we use clang, then use accelerate framework.  Otherwise
+# build and use OpenBLAS.
 
-CC=clang
-CXX=clang++
+use_gcc=yes
+
+CC=gcc-11
+CXX=g++-11
+FC=gfortran-11
+#CC=clang
+#CXX=clang++
+#FC=
 
 CFLAGS="-O3 -fPIC"
-CXXFLAGS="-O3 -fPIC -std=c++11 -stdlib=libc++"
+FCFLAGS="-O3 -fPIC"
+# Use the second when building with clang
+CXXFLAGS="-O3 -fPIC -std=c++11"
+#CXXFLAGS="-O3 -fPIC -std=c++11 -stdlib=libc++"
 
 MAKEJ=2
 
 PREFIX=/usr/local
 
 # Install OS packages with homebrew
-
 brew install mpich
+
+# Optionally install gcc
+if [ "x${use_gcc}" = "xyes" ]; then
+    brew install gcc
+fi
 
 # In order to maximize ABI compatibility with numpy, build with the newest numpy
 # version containing the oldest ABI version compatible with the python we are using.
@@ -59,6 +73,33 @@ CC="${CC}" CFLAGS="${CFLAGS}" pip install -v -r "${scriptdir}/build_requirements
 # Install mpi4py
 
 pip install mpi4py
+
+# Optionally Install Openblas
+
+if [ "x${use_gcc}" = "xyes" ]; then
+    openblas_version=0.3.19
+    openblas_dir=OpenBLAS-${openblas_version}
+    openblas_pkg=${openblas_dir}.tar.gz
+
+    echo "Fetching OpenBLAS..."
+
+    if [ ! -e ${openblas_pkg} ]; then
+        curl -SL https://github.com/xianyi/OpenBLAS/archive/v${openblas_version}.tar.gz -o ${openblas_pkg}
+    fi
+
+    echo "Building OpenBLAS..."
+
+    rm -rf ${openblas_dir}
+    tar xzf ${openblas_pkg} \
+        && pushd ${openblas_dir} >/dev/null 2>&1 \
+        && make USE_OPENMP=1 NO_SHARED=1 \
+        MAKE_NB_JOBS=${MAKEJ} \
+        CC="${CC}" FC="${FC}" DYNAMIC_ARCH=1 TARGET=GENERIC \
+        COMMON_OPT="${CFLAGS}" FCOMMON_OPT="${FCFLAGS}" \
+        LDFLAGS="-fopenmp -lm" libs netlib shared \
+        && make NO_SHARED=1 DYNAMIC_ARCH=1 TARGET=GENERIC PREFIX="${PREFIX}" install \
+        && popd >/dev/null 2>&1
+fi
 
 # libgmp
 
@@ -130,12 +171,16 @@ fi
 
 echo "Building FFTW..."
 
+thread_opt="--enable-threads"
+if [ "x${use_gcc}" = "xyes" ]; then
+    thread_opt="--enable-openmp"
+fi
+
 rm -rf ${fftw_dir}
 tar xzf ${fftw_pkg} \
     && pushd ${fftw_dir} >/dev/null 2>&1 \
     && CC="${CC}" CFLAGS="${CFLAGS}" \
-    ./configure \
-    --enable-threads \
+    ./configure ${thread_opt} \
     --enable-static \
     --disable-shared \
     --prefix="${PREFIX}" \
@@ -188,6 +233,11 @@ fi
 
 echo "Building SuiteSparse..."
 
+blas_opt="-framework Accelerate"
+if [ "x${use_gcc}" = "xyes" ]; then
+    blas_opt="-lopenblas -fopenmp -lm"
+fi
+
 rm -rf ${ssparse_dir}
 tar xzf ${ssparse_pkg} \
     && pushd ${ssparse_dir} >/dev/null 2>&1 \
@@ -195,11 +245,11 @@ tar xzf ${ssparse_pkg} \
     && make library JOBS=${MAKEJ} \
     CC="${CC}" CXX="${CXX}" \
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" AUTOCC=no \
-    GPU_CONFIG="" BLAS="-framework Accelerate" \
+    GPU_CONFIG="" BLAS="${blas_opt}" \
     && make static JOBS=${MAKEJ} \
     CC="${CC}" CXX="${CXX}" \
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" AUTOCC=no \
-    GPU_CONFIG="" BLAS="-framework Accelerate" \
+    GPU_CONFIG="" BLAS="${blas_opt}" \
     && cp -a ./include/* "${PREFIX}/include/" \
     && find . -name "*.a" -exec cp -a '{}' "${PREFIX}/lib/" \; \
     && popd >/dev/null 2>&1
